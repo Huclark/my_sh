@@ -9,5 +9,5 @@
 
 int main(int argc, char **argv)
 {
-	return (sh_loop(argv, argc));
+	return (sh_loop(argc, argv));
 }

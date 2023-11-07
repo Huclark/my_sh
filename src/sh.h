@@ -12,7 +12,7 @@
 #include <limits.h>
 
 /* Custom prototypes for loop */
-int sh_loop(char **argv);
+int sh_loop(int argc, char **argv);
 
 
 #endif
