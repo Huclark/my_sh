@@ -101,7 +101,7 @@ int non_interactive(char **argv, int file_descriptor)
 	cli_arg2 = stringdup(cli_arg1);
 	cli_arg3 = stringdup(cli_arg1);
 
-	/* Parse string into array of commands & parameters */
+	/* Parse string into an array of commands & parameters */
 	arg_parse1 = parse_line1(cli_arg1);
 	arg_parse2 = parse_line2(cli_arg2);
 
