@@ -10,9 +10,11 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <limits.h>
+#include <fcntl.h>
 
 /* Custom prototypes for loop */
 int sh_loop(int argc, char **argv);
-
+int interactive(char **argv, int file_descriptor);
+int non_interactive(char **argv, int file_descriptor);
 
 #endif
