@@ -15,7 +15,7 @@ char *sh_input(int fd)
 	int len;
 
 	bytesRead = _getline(fd, &line);
-	printf("%s\n", line);
+
 	if (bytesRead != -1)
 	{
 		buffer = stringdup(line);
@@ -30,15 +30,22 @@ char *sh_input(int fd)
 		free(line);
 	}
 	else if (bytesRead == -1)
-		return (NULL);
+	{
+		if (stringcompare(line, "\n") == 0)
+		{
+			free(line);
+			return (NULL);
+		}
+		else
+			return (line);
+	}
 
 	while ((bytesRead = _getline(fd, &line)) != -1)
 	{
-		stringconcat(buffer, line);
-
 		len = stringlength(buffer);
 		buffer[len] = '\n';
 		buffer[len + 1] = '\0';
+		stringconcat(buffer, line);
 		free(line);
 	}
 	if (stringcompare(buffer, "\n") == 0)
@@ -77,6 +84,18 @@ ssize_t _getline(int fd, char **line)
 
 	while (read(fd, &ch, 1) > 0)
 	{
+		if (fd == STDIN_FILENO && ch == '\n')
+		{
+			if (br == 0)
+			{
+				buffer[br] = ch;
+				buffer[br + 1] = '\0';
+			}
+			else
+				buffer[br] = '\0';
+			return (-1);
+		}
+
 		if (ch == '\n')
 		{
 			buffer[br] = '\0';
