@@ -82,36 +82,19 @@ int stringlength(char *str)
 * @source: A pointer to the source string
 * Return: A pointer to the target string
 */
+
 char *stringconcat(char *target, char *source)
 {
-	int targetlen = 0, sourcelen = 0, idx = 0;
-	char *new_target;
+	int targetlen = 0, idx = 0;
 
-	while (target[targetlen] != '\0')
-		targetlen++;
-
-	while (source[sourcelen] != '\0')
-		sourcelen++;
-
-	if (targetlen + sourcelen >= sizeof(target))
+	while (target[idx] != '\0')
 	{
-		new_target = malloc(targetlen + sourcelen + 1);
-		if (!new_target)
-		{
-			perror("Failed to allocate memory");
-			return (NULL);
-		}
-
-		while (idx < targetlen)
-		{
-			new_target[idx] = target[idx];
-			idx++;
-		}
-		free(target);
-		target = new_target;
+		targetlen += 1;
+		idx++;
 	}
 
 	idx = 0;
+
 	while (source[idx] != '\0')
 	{
 		target[targetlen + idx] = source[idx];
@@ -122,6 +105,7 @@ char *stringconcat(char *target, char *source)
 
 	return (target);
 }
+
 
 
 /**

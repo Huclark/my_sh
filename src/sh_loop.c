@@ -70,23 +70,21 @@ int interactive(char **argv, int fd, char **envp)
 		fflush(stdout); /* To ensure prompt is always printed to stdout first */
 
 		/* Get user input and return as string */
-		cli_arg1 = sh_input(fd);
+		while ((cli_arg1 = sh_input(fd)) != NULL)
+		{
+			cli_arg2 = stringdup(cli_arg1);
+			cli_arg3 = stringdup(cli_arg1);
 
-		if (!cli_arg1)
-			return (EXIT_SUCCESS);
-		cli_arg2 = stringdup(cli_arg1);
-		cli_arg3 = stringdup(cli_arg1);
+			/* Parse string into array of commands & parameters */
+			arg_parse1 = parse_line1(cli_arg1);
+			arg_parse2 = parse_line2(cli_arg2);
 
-		/* Parse string into array of commands & parameters */
-		arg_parse1 = parse_line1(cli_arg1);
-		arg_parse2 = parse_line2(cli_arg2);
+			/* Execute commands */
+			status = sh_exec(arg_parse1, arg_parse2, argv, envp);
 
-		/* Execute commands */
-		status = sh_exec(arg_parse1, arg_parse2, argv, envp);
-
-		/* Free memory allocated */
-		free_loop(cli_arg1, cli_arg2, cli_arg3, arg_parse1, arg_parse2);
-
+			/* Free memory allocated */
+			free_loop(cli_arg1, cli_arg2, cli_arg3, arg_parse1, arg_parse2);
+		}
 		dh.line_no++; /* Handle line count */
 	} while (dh.loop_status);
 

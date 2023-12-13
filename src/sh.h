@@ -88,6 +88,7 @@ char *stringcopy(char *, char *);
 int stringcompare(char *, char *);
 int stringlength(char *);
 char *stringconcat(char *, char *);
+char *stringconcat2(char *, char *);
 char *stringdup(const char *);
 char *strtok_delims(char *, char *);
 char *delim_checker(char *, int);

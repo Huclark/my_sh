@@ -9,44 +9,17 @@ ssize_t _getline(int fd, char **line);
 */
 char *sh_input(int fd)
 {
-	char *line;
 	char *buffer;
-	ssize_t bytesRead;
-	int len;
 
-	bytesRead = _getline(fd, &line);
-
-	if (bytesRead != -1)
+	if (_getline(fd, &buffer) == -1)
 	{
-		buffer = stringdup(line);
-		if (!buffer)
+		if (stringcompare(buffer, "\n") == 0)
 		{
-			if (fd != STDIN_FILENO)
-				close(fd);
-			perror("Failed to allocate memory");
-			free(line);
-			exit(EXIT_FAILURE);
-		}
-		free(line);
-	}
-	else if (bytesRead == -1)
-	{
-		if (stringcompare(line, "\n") == 0)
-		{
-			free(line);
+			free(buffer);
 			return (NULL);
 		}
 		else
-			return (line);
-	}
-
-	while ((bytesRead = _getline(fd, &line)) != -1)
-	{
-		len = stringlength(buffer);
-		buffer[len] = '\n';
-		buffer[len + 1] = '\0';
-		stringconcat(buffer, line);
-		free(line);
+			return (buffer);
 	}
 	if (stringcompare(buffer, "\n") == 0)
 	{
