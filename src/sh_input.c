@@ -1,93 +1,115 @@
 #include "sh.h"
 
+ssize_t _getline(int fd, char **line);
+
 /**
  * sh_input - Takes in user input and returns it as a string
- * @file_descriptor: File descriptor to read from
+ * @fd: File descriptor to read from
  * Return: User input
 */
-char *sh_input(int file_descriptor)
+char *sh_input(int fd)
 {
-	unsigned int buflength = READ_BUFFER, position_size = 0;
-	int ch;
-	char *line_buffer = malloc(sizeof(char) * buflength);
+	char *line;
+	char *buffer;
+	ssize_t bytesRead;
+	int len;
 
-	if (line_buffer == NULL) /* If malloc fails */
+	bytesRead = _getline(fd, &line);
+	printf("%s\n", line);
+	if (bytesRead != -1)
 	{
-		perror("Failed to allocate memory");
-		exit(EXIT_FAILURE);
-	}
-	while (1) /* Infinite loop */
-	{
-		ch = sh_getchar(file_descriptor); /* Read character */
-
-		/* Handling newline and EOF (Ctrl + D) when reading from stdin */
-		if (file_descriptor == STDIN_FILENO && (ch == '\n' || ch == EOF))
+		buffer = stringdup(line);
+		if (!buffer)
 		{
-			/* Empty command or EOF case */
-			if (position_size == 0 || ch == EOF)
-			{
-				free(line_buffer);
-				return (NULL);
-			}
-			break;
+			if (fd != STDIN_FILENO)
+				close(fd);
+			perror("Failed to allocate memory");
+			free(line);
+			exit(EXIT_FAILURE);
 		}
-		/* If newline is encountered when reading from a file */
-		else if (ch == '\n')
-			continue;
-		/* EOF when reading from a file*/
-		else if (ch == EOF)
-			break;
-		/* Store character in buffer */
-		line_buffer[position_size] = (char)ch;
-		position_size++;
-
-		/* Realloc if we hit size threshold */
-		if (position_size >= buflength)
-			refill_buffer(&position_size, &buflength, &line_buffer);
+		free(line);
 	}
-	line_buffer[position_size] = '\0'; /* Null-terminate string */
-	return (line_buffer);
+	else if (bytesRead == -1)
+		return (NULL);
+
+	while ((bytesRead = _getline(fd, &line)) != -1)
+	{
+		stringconcat(buffer, line);
+
+		len = stringlength(buffer);
+		buffer[len] = '\n';
+		buffer[len + 1] = '\0';
+		free(line);
+	}
+	if (stringcompare(buffer, "\n") == 0)
+	{
+		free(buffer);
+		return (NULL);
+	}
+	return (buffer);
 }
 
 
-
 /**
- * sh_getchar - Reads a character from stdin
- * @file_descriptor: The file descriptor to read from
- * Return: The character read (tyypecast as an int)
- *         Or EOF on failure or there is no character left
+ * _getline - Reads characters from a file stream and stores bytes read
+ *            in a buffer
+ * @fd: File descriptor to read from
+ * @line: A pointer to a character array
+ * Return: Bytes read or -1 on failure
 */
-int sh_getchar(int file_descriptor)
+ssize_t _getline(int fd, char **line)
 {
+	char *buffer;
 	char ch;
+	ssize_t br = 0;
+	ssize_t buffer_size = READ_BUFFER;
 
-	if (read(file_descriptor, &ch, 1) == 1)
-		return ((int)ch);
-	else
-		return (EOF);
-}
-
-
-/**
- * refill_buffer - Reallocates memory to a buffer
- * @position_size: Pointer to position_size
- * @buflength: Pointer to buflength
- * @line_buffer: Pointer to buffer
-*/
-void refill_buffer(unsigned int *position_size, unsigned int *buflength,
-					char **line_buffer)
-{
-	/* Increase buffer size */
-	*buflength += READ_BUFFER;
-
-	/* Reallocate memory for buffer */
-	*line_buffer = sh_realloc(*line_buffer, *buflength,
-								sizeof(char) * *buflength);
-
-	/* Handle memory allocation failure */
-	if (*line_buffer == NULL)
+	*line = malloc(buffer_size);
+	if (!line)
 	{
 		perror("Failed to allocate memory");
+		if (fd != STDIN_FILENO)
+			close(fd);
 		exit(EXIT_FAILURE);
 	}
+
+	buffer = *line;
+
+	while (read(fd, &ch, 1) > 0)
+	{
+		if (ch == '\n')
+		{
+			buffer[br] = '\0';
+			return (br);
+		}
+		buffer[br++] = ch;
+
+		if (br >= buffer_size - 1)
+		{
+			/* Increase buffer size */
+			buffer_size += READ_BUFFER;
+
+			/* Re-allocate memory for buffer */
+			*line = sh_realloc(*line, buffer_size, sizeof(char) * buffer_size);
+
+			/* Handle memory allocation failure */
+			if (!*line)
+			{
+				perror("Failed to allocate memory");
+				if (fd != STDIN_FILENO)
+					close(fd);
+				exit(EXIT_FAILURE);
+			}
+			/* Update buffer to point to the next available memory location */
+			buffer = *line + br;
+		}
+	}
+	if (br > 0)
+	{
+		buffer[br] = '\0';
+		return (br);
+	}
+	free(*line);
+	*line = NULL;
+	return (-1); /* EOF */
 }
